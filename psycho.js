@@ -4,6 +4,7 @@
  */
 
 ; (function () {
+    'use strict';
     //#region 变量
     var NODE_TYPE_ELEMENT = 1;
     var psycho = {};
@@ -56,7 +57,7 @@
      */
     function isArray(value) {
         if (Array.isArray) {
-            return Array.isArray;
+            return Array.isArray(value);
         }
         else {
             return Object.prototype.toString.call(value) === '[object Array]';
@@ -81,16 +82,23 @@
     //#endregion
     //#region 测试
     function except(value, exceptedValue, failuredMessage) {
-        var v;
+        var v, passed;
 
         if (typeof value === 'function') {
             v = value();
         } else {
             v = value;
         }
+        if (isArray(v)) {
+            passed = equalArray(v, exceptedValue);
 
-        if (v === exceptedValue) {
-            console.log("Passed");
+        }
+        else {
+            passed = (v === exceptedValue);
+
+        }
+        if (passed) {
+            console.log('Passed');
         }
         else {
             console.log(failuredMessage);
@@ -98,15 +106,37 @@
     }
     //#endregion
     //#region 数组
+    /**
+     * 比较2个数组是否相等
+     */
+    function equalArray(a, b) {
+        if (every(function (v) {
+               return isArray(v)
+        }, a, b)) {
 
+            var al = a.length;
+            if (al === 0 || al != b.length)
+                return false;
+            else {
+                for (var i = 0; i < al; i++) {
+                    if (a[i] !== b[i])
+                        return false;
+                }
+                return true;
+            }
+        }
+    }
+    /**
+     * 模仿Array.every
+     */
     function every(callbackFn) {
         var array = slice.call(arguments, 1);
         for (var i = 0, ii = array.length; i < ii; i++) {
-            if (callbackFn(array[i])) {
-                return 0;
+            if (!callbackFn(array[i])) {
+                return false;
             }
         }
-        return 1;
+        return true;
     }
     /**
      * forEach模仿Array.forEach
@@ -136,16 +166,32 @@
         }
     }
     //#endregion
+
+    //#region 对象
+
     /**
-     * 合并多个对象，比如说，设计一个组件,
-     * 允许使用者传入一个参数'options'
-     * 然后和默认的配置defaults合并
+     * 模仿Object.keys
+     * 避免兼容性的问题
      * 
-     * @param:{Object} target:合并的目标对象
-     * @param:{Object|Array} objs：待合并的对象和对象数组
-     * @param：{Boolean} deep：是否递归合并
-     * 
+     * @param {Object} obj：对象
      */
+    function keys(obj) {
+        var result = [], prop;
+        for (prop in obj) {
+            result.push(prop);
+        }
+        return result;
+    }
+    /**
+    * 合并多个对象，比如说，设计一个组件,
+    * 允许使用者传入一个参数'options'
+    * 然后和默认的配置defaults合并
+    * 
+    * @param:{Object} target:合并的目标对象
+    * @param:{Object|Array} objs：待合并的对象和对象数组
+    * @param：{Boolean} deep：是否递归合并
+    * 
+    */
     function extend(target, objs, deep) {
         for (var i = 0, ii = objs.length; i < ii; ++i) {
             var obj = objs[i], typeObj = typeof obj;
@@ -173,13 +219,15 @@
         return target;
 
     }
+    //#endregion
+
     function merge(dst) {
         return extend(dst, slice.call(arguments, 1), true);
     }
     function inherit(parent, extra) {
         return extend(Object.create(parent), slice.call(arguments, 1), false);
     }
-
+    //#region
     /**
      * https://github.com/bevacqua/fuzzysearch/blob/master/index.js
      */
@@ -203,6 +251,7 @@
         }
         return true;
     }
+    //#endregion
     //#region DOM
     /**
      * 测试DOM元素是否包含指定的CSS类名 
@@ -217,23 +266,12 @@
     //#endregion
 
     psycho.hasClass = hasClass;
-
-    psycho.register = function (value) {
-
-        switch (value) {
-            case 'array':
-
-                break;
-
-        }
-
-    }
-
     psycho.every = every;
     psycho.except = except;
     psycho.forEach = forEach;
+    psycho.keys = keys;
 
-    if (isWindow(window))
+    if ((typeof window !== 'undefined') && isWindow(window))
         window.psycho = psycho;
     if (typeof exports !== 'undefined') {
         exports.psycho = psycho;
