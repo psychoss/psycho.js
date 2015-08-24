@@ -1,11 +1,13 @@
 /**
- * 一个功能内，目标是逐步替代jQuery
+ * 一个功能类，目标是逐步替代jQuery
  * 再者是用简单直观的方式提供了解Javascript的用法
  */
 
-var psycho = function () {
+; (function () {
     //#region 变量
     var NODE_TYPE_ELEMENT = 1;
+    var psycho = {};
+    var slice = [].slice;
     //#endregion
     //#region 测试数据的类型
     /**
@@ -45,15 +47,15 @@ var psycho = function () {
     }
     function isElement(node) {
         return !!(node &&
-          (node.nodeName 
-          || (node.prop && node.attr && node.find)));  
+          (node.nodeName
+          || (node.prop && node.attr && node.find)));
     }
     /**
      * 测试参数是否为数组类型
      * @param {any}:value 任何值
      */
     function isArray(value) {
-        if ( Array.isArray) {
+        if (Array.isArray) {
             return Array.isArray;
         }
         else {
@@ -76,6 +78,37 @@ var psycho = function () {
         return isString(obj) || isArray(obj) || length === 0 ||
                typeof length === 'number' && length > 0 && (length - 1) in obj;
     }
+    //#endregion
+    //#region 测试
+    function except(value, exceptedValue, failuredMessage) {
+        var v;
+
+        if (typeof value === 'function') {
+            v = value();
+        } else {
+            v = value;
+        }
+
+        if (v === exceptedValue) {
+            console.log("Passed");
+        }
+        else {
+            console.log(failuredMessage);
+        }
+    }
+    //#endregion
+    //#region 数组
+ 
+    function every(callbackFn) {
+        var array = slice.call(arguments, 1);
+        for (var i = 0, ii = array.length; i < ii; i++) {
+            if (callbackFn(array[i])) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+
     //#endregion
     /**
      * 合并多个对象，比如说，设计一个组件,
@@ -120,6 +153,30 @@ var psycho = function () {
     function inherit(parent, extra) {
         return extend(Object.create(parent), slice.call(arguments, 1), false);
     }
+
+    /**
+     * https://github.com/bevacqua/fuzzysearch/blob/master/index.js
+     */
+    function fuzzysearch(needle, haystack) {
+        var hlen = haystack.length;
+        var nlen = needle.length;
+        if (nlen > hlen) {
+            return false;
+        }
+        if (nlen === hlen) {
+            return needle === haystack;
+        }
+        outer: for (var i = 0, j = 0; i < nlen; i++) {
+            var nch = needle.charCodeAt(i);
+            while (j < hlen) {
+                if (haystack.charCodeAt(j++) === nch) {
+                    continue outer;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
     //#region DOM
     /**
      * 测试DOM元素是否包含指定的CSS类名 
@@ -132,5 +189,9 @@ var psycho = function () {
       indexOf(" " + selector + " ") > -1);
     }
     //#endregion
-}
+    psycho.every = every;
+    psycho.except = except;
+    window.psycho = psycho;
+
+})();
 
