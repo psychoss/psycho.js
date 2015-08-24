@@ -1,4 +1,4 @@
- /**
+/**
  * 一个功能类，目标是逐步替代jQuery
  * 再者是用简单直观的方式提供了解Javascript的用法
  */
@@ -130,7 +130,7 @@
     /**
      * 模仿Array.every
      */
-    function every(callbackFn) {
+    function _every(callbackFn) {
         var array = slice.call(arguments, 1);
         for (var i = 0, ii = array.length; i < ii; i++) {
             if (!callbackFn(array[i])) {
@@ -147,7 +147,7 @@
      * @param {Object Function} obj：每次循环调用的函数
      * @param {Object} ctx:thisArg
      */
-    function forEach(obj, fn, ctx) {
+    function _forEach(obj, fn, ctx) {
         var hasOwn = Object.prototype.hasOwnProperty;
 
         if (Object.prototype.toString.call(fn) !== '[object Function]') {
@@ -165,6 +165,27 @@
                 }
             }
         }
+    }
+
+    function _group(value, key, sortKey) {
+        var result = {};
+        if (Array.isArray(value)) {
+            Array.prototype.forEach.call(value, function (v) {
+                if (!result[v[key]]) result[v[key]] = [];
+                result[v[key]].push(v);
+            })
+        }
+        if (sortKey) {
+            var keys = Object.keys(result);
+            for (var i = 0, ii = keys.length; i < ii; i++) {
+                result[keys[i]] = result[keys[i]].sort(function (a, b) {
+                    if (a[sortKey] > b[sortKey]) return 1;
+                    if (a[sortKey] < b[sortKey]) return -1;
+                    return 0;
+                })
+            }
+        }
+        return result;
     }
     //#endregion
 
@@ -228,7 +249,7 @@
     function inherit(parent, extra) {
         return extend(Object.create(parent), slice.call(arguments, 1), false);
     }
-    //#region
+    //#region 其他
     /**
      * https://github.com/bevacqua/fuzzysearch/blob/master/index.js
      */
@@ -253,6 +274,48 @@
         return true;
     }
     //#endregion
+    //#region math
+    function clamp(val, max) {
+        return Math.min(max, Math.max(0, val));
+    }
+
+    //#endregion
+
+    //#region string
+    function __trim(value, direction) {
+        direction = direction || 0;
+        if (direction === 0)
+            return value.replace(/^\s+/, '').replace(/\s+$/, '');
+        if (direction === 1)
+            return value.replace(/\s+$/, '');
+        if (direction === -1)
+            return value.replace(/^\s+/, '');
+    }
+    function __padding(value, length, direction, paddingChar) {
+        direction = direction || -1;
+        paddingChar = paddingChar || '0';
+        var gap = length - value;
+        if (gap < 1) return value;
+
+        for (var i = 0, ii = gap; i < length; i++) {
+            if (direction === -1)
+                value = paddingChar + value;
+            else
+                value = value + paddingChar;
+        }
+        return value;
+    }
+    function __IsNullOrWhiteSpace(value) {
+        return (value === null) || (__trim(value).length < 1);
+    }
+    function __getExtension(value) {
+        var pos = value.lastIndexOf('.');
+        if (~pos)
+            return value.substring(pos);
+        return false;
+    }
+    //#endregion
+
     //#region DOM
     /**
      * 测试DOM元素是否包含指定的CSS类名 
@@ -307,19 +370,26 @@
     }
     function $(callback) {
         document.addEventListener("readystatechange", function () {
-
             if (document.readyState == "complete") {
                 callback();
             }
-
         });
     }
+    function $html(element, value) {
+        if (arguments.length > 1) {
+            element.innerHTML = value;
+            return;
+        }
+        return element.innerHTML;
+    }
+
     //#endregion
 
-    psycho.every = every;
+    psycho._every = _every;
     psycho.except = except;
-    psycho.forEach = forEach;
+    psycho._forEach = _forEach;
     psycho.keys = keys;
+    psycho_group = _group;
 
     psycho.$next = $next;
     psycho.$find = $find;
@@ -328,6 +398,8 @@
     psycho.$maxHeight = $maxHeight;
     psycho.$ = $;
     psycho.$computedStyle = $computedStyle;
+
+
     if ((typeof window !== 'undefined') && isWindow(window))
         window.psycho = psycho;
     if (typeof exports !== 'undefined') {
