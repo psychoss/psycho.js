@@ -21,14 +21,14 @@ var psycho = function () {
      */
     function isUndefined(value) { return typeof value === void 0; }
     /**
-     * 测试字符串是否为字符串类型
+     * 测试参数是否为字符串类型
      *  @param {any}:value 任何值
      */
     function isString(value) {
         return typeof value === 'string';
     }
     /**
-     * 测试字符串是否为数值类型
+     * 测试参数是否为数值类型
      *  @param {any}:value 任何值
      */
     function isNumber(value) {
@@ -45,12 +45,19 @@ var psycho = function () {
     }
     function isElement(node) {
         return !!(node &&
-          (node.nodeName  // we are a direct element
-          || (node.prop && node.attr && node.find)));  // we have an on and find method part of jQuery API
+          (node.nodeName 
+          || (node.prop && node.attr && node.find)));  
     }
-    function isArray() {
-        if ('isArray' in Array) {
+    /**
+     * 测试参数是否为数组类型
+     * @param {any}:value 任何值
+     */
+    function isArray(value) {
+        if ( Array.isArray) {
             return Array.isArray;
+        }
+        else {
+            return Object.prototype.toString.call(value) === '[object Array]';
         }
     }
     function isArrayLike(obj) {
