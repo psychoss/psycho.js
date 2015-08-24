@@ -7,6 +7,7 @@
     'use strict';
     //#region 变量
     var NODE_TYPE_ELEMENT = 1;
+    var NODE_TYPE_DOCUMENT_FRAGMENT = 11;
     var psycho = {};
     var slice = [].slice;
     //#endregion
@@ -115,7 +116,7 @@
         }, a, b)) {
 
             var al = a.length;
-            if (al === 0 || al != b.length)
+            if (al != b.length)
                 return false;
             else {
                 for (var i = 0; i < al; i++) {
@@ -259,9 +260,31 @@
      * @param {string} 字符串 
      */
     function hasClass(element, className) {
-        if (!element.getAttribute) return true;
+        if (!element.getAttribute) return false;
         return ((" " + (element.getAttribute('class') || '') + " ").replace(/[\n\t]/g, " ").
       indexOf(" " + selector + " ") > -1);
+    }
+    function parent(element) {
+        var parent = element.parentNode;
+        return parent && parent.nodeType !== NODE_TYPE_DOCUMENT_FRAGMENT ? parent : null;
+    }
+    function next(element) {
+        return element.nextElementSibling;
+    }
+    function find(elemnt, selector, considerCompatible) {
+        considerCompatible = considerCompatible || 0;
+        if (considerCompatible) {
+            var cssSelectorMark = selector.substring(0, 1);
+            if (cssSelectorMark === '.') {
+                return elemnt.getElementsByClassName(selector.substring(1));
+            }
+            else {
+                return elemnt.getElementsByTagName(selector);
+            }
+        } else {
+            //支持IE8
+            return elemnt.querySelectorAll(selector);
+        }
     }
     //#endregion
 
