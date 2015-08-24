@@ -1,4 +1,4 @@
-/**
+ /**
  * 一个功能类，目标是逐步替代jQuery
  * 再者是用简单直观的方式提供了解Javascript的用法
  */
@@ -259,19 +259,19 @@
      * @param {DOM} element:DOM元素
      * @param {string} 字符串 
      */
-    function hasClass(element, className) {
+    function $hasClass(element, className) {
         if (!element.getAttribute) return false;
         return ((" " + (element.getAttribute('class') || '') + " ").replace(/[\n\t]/g, " ").
       indexOf(" " + selector + " ") > -1);
     }
-    function parent(element) {
+    function $parent(element) {
         var parent = element.parentNode;
         return parent && parent.nodeType !== NODE_TYPE_DOCUMENT_FRAGMENT ? parent : null;
     }
-    function next(element) {
+    function $next(element) {
         return element.nextElementSibling;
     }
-    function find(elemnt, selector, considerCompatible) {
+    function $find(elemnt, selector, considerCompatible) {
         considerCompatible = considerCompatible || 0;
         if (considerCompatible) {
             var cssSelectorMark = selector.substring(0, 1);
@@ -286,14 +286,48 @@
             return elemnt.querySelectorAll(selector);
         }
     }
+    function $computedStyle(elemnt) {
+        var view = elemnt.ownerDocument.defaultView;
+        if (!view.opener) {
+            view = window;
+        }
+        return view.getComputedStyle(elemnt);
+    }
+    /**
+     * 最大高度，包括margin
+     * 注意只能获取整数
+     * 
+     */
+    function $maxHeight(elemnt) {
+        var style = $computedStyle(elemnt);
+        if (parseInt(style['height'], 10) === 0) {
+            return 0;
+        }
+        return elemnt.scrollHeight + parseInt(style['marginBottom'], 10) + parseInt(style['marginTop'], 10);
+    }
+    function $(callback) {
+        document.addEventListener("readystatechange", function () {
+
+            if (document.readyState == "complete") {
+                callback();
+            }
+
+        });
+    }
     //#endregion
 
-    psycho.hasClass = hasClass;
     psycho.every = every;
     psycho.except = except;
     psycho.forEach = forEach;
     psycho.keys = keys;
 
+    psycho.$next = $next;
+    psycho.$find = $find;
+    psycho.$hasClass = $hasClass;
+    psycho.$parent = $parent;
+    psycho.$maxHeight = $maxHeight;
+    psycho.$ = $;
+    psycho.$computedStyle = $computedStyle;
     if ((typeof window !== 'undefined') && isWindow(window))
         window.psycho = psycho;
     if (typeof exports !== 'undefined') {
