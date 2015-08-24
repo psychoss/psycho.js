@@ -98,7 +98,7 @@
     }
     //#endregion
     //#region 数组
- 
+
     function every(callbackFn) {
         var array = slice.call(arguments, 1);
         for (var i = 0, ii = array.length; i < ii; i++) {
@@ -108,7 +108,33 @@
         }
         return 1;
     }
+    /**
+     * forEach模仿Array.forEach
+     * 避免兼容性的问题
+     * 
+     * @param {Array|Object} obj：待循环访问的对象。
+     * @param {Object Function} obj：每次循环调用的函数
+     * @param {Object} ctx:thisArg
+     */
+    function forEach(obj, fn, ctx) {
+        var hasOwn = Object.prototype.hasOwnProperty;
 
+        if (Object.prototype.toString.call(fn) !== '[object Function]') {
+            throw new TypeError('迭代器必须是个函数');
+        }
+        var l = obj.length;
+        if (l === +l) {
+            for (var i = 0; i < l; i++) {
+                fn.call(ctx, obj[i], i, obj);
+            }
+        } else {
+            for (var k in obj) {
+                if (hasOwn.call(obj, k)) {
+                    fn.call(ctx, obj[k], k, obj);
+                }
+            }
+        }
+    }
     //#endregion
     /**
      * 合并多个对象，比如说，设计一个组件,
@@ -189,9 +215,28 @@
       indexOf(" " + selector + " ") > -1);
     }
     //#endregion
+
+    psycho.hasClass = hasClass;
+
+    psycho.register = function (value) {
+
+        switch (value) {
+            case 'array':
+
+                break;
+
+        }
+
+    }
+
     psycho.every = every;
     psycho.except = except;
-    window.psycho = psycho;
+    psycho.forEach = forEach;
 
+    if (isWindow(window))
+        window.psycho = psycho;
+    if (typeof exports !== 'undefined') {
+        exports.psycho = psycho;
+    }
 })();
 
