@@ -10,9 +10,11 @@
     var NODE_TYPE_ELEMENT = 1;
     var NODE_TYPE_DOCUMENT_FRAGMENT = 11;
     var psycho = {};
-    var slice = [].slice;
+    var call = Function.call;
+    var slice = uncurryThis(Array.prototype.slice);
     var ajax = {};
     var events = [];
+
 
 
     //#endregion
@@ -276,6 +278,11 @@
         return r;
     }
 
+    function uncurryThis(f) {
+        return function () {
+            return call.apply(f, arguments);
+        };
+    }
     /**
      * 模仿Object.keys
      * 避免兼容性的问题
@@ -451,6 +458,13 @@
         }
         return value;
     }
+    /**
+     * 第一个字母大写
+     * @param {String} value:字符串
+     */
+    function __firstCharUppper(value) {
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
+    }
 
     //#endregion
 
@@ -488,6 +502,7 @@
         var file = settings.file || '';
         request.timeout = settings.timeout || 5000;
 
+        request.onerror = settings.err;
 
         request.ontimeout = settings.err;
         request.open('POST', settings.url);
@@ -506,7 +521,44 @@
             request.setRequestHeader(v, headers[v]);
         })
     }
-
+    /**
+     * 上传多个文件
+     * @param {{}}:settings:设置ajax的数据
+     * @param {Function}:callback:一个以当前XMLHTTMRequest为参数的回调
+     */
+    ajax.uploadFile = function (settings, callback) {
+        var request = new XMLHttpRequest();
+        var formData;
+        if (settings.data) {
+            formData = new FormData();
+            keys(settings.data).forEach(function (k) {
+                console.log(k);
+                if (k === 'file') {
+                    var files = settings.data[k];
+                    var n = files.length;
+                    while (n--) {
+                        formData.append(k + n, files[n]);}
+                }
+                else
+                    formData.append(k, settings.data[k]);})
+        } else {
+            if (settings.err) {
+                settings.err();
+            }
+            return;
+        }
+        request.timeout = settings.timeout || 5000;
+        request.ontimeout = settings.err;
+        request.onerror = settings.err;
+        request.open('POST', settings.url);
+        //request.setRequestHeader("content-type", "multipart/form-data");
+        if (settings.headers) {
+            ajax.setHeaders(request, settings.headers);
+        }
+        callback(request);
+        console.log(formData);
+        request.send(formData);
+    }
     //#endregion
 
     //#region DOM
@@ -633,7 +685,7 @@
     function $form(element) {
         var child = $children(element, true);
         var re = /(input)|(select)|(textarea)/i;
-        var reType = /(text)|(file)|(hidden)|(password)|(number)|(select)/i;
+        var reType = /(text)|(hidden)|(password)|(number)|(select)/i;
         var n = child.length;
         var r = {};
         while (n--) {
@@ -641,7 +693,10 @@
                 var c = child[n];
                 var name = c.getAttribute('name');
                 if (name == null) continue;
-                if (reType.test(c.type)) {
+                if (c.type === 'file') {
+                    r[name] = c.files;
+                }
+                else if (reType.test(c.type)) {
                     r[name] = c.value;
                 }
             }
@@ -701,6 +756,9 @@
         else
             element.addEventListener('click', callback);
     }
+    function $on(element, eventType, callback) {
+        element.addEventListener(eventType, callback);
+    }
     function $validator(element, regexRule, errorSummary, showElement) {
         var validate = function () {
             if (regexRule.test(element.value)) {
@@ -714,7 +772,7 @@
         element.addEventListener('keyup', validate);
     }
     //#endregion
-    psycho.$validator = $validator;
+
     psycho.$ = $;
     psycho.$bind = $bind;
     psycho.$click = $click;
@@ -728,11 +786,14 @@
     psycho.$next = $next;
     psycho.$parent = $parent;
     psycho.$repeat = $repeat;
+    psycho.$show = $show;
+    psycho.$on = $on;
+    psycho.$validator = $validator;
+    psycho.__firstCharUppper = __firstCharUppper;
     psycho.__format = __format;
     psycho.__padding = __padding;
     psycho.__trim = __trim;
     psycho._every = _every;
-    psycho.$show = $show;
     psycho._forEach = _forEach;
     psycho._form = _form;
     psycho._group = _group;
@@ -740,11 +801,11 @@
     psycho.ajax = ajax;
     psycho.emit = emit;
     psycho.except = except;
+    psycho.extend = extend;
+    psycho.inherit = inherit;
     psycho.isRegExp = isRegExp;
     psycho.keys = keys;
     psycho.on = on;
-    psycho.inherit = inherit;
-    psycho.extend = extend;
 
     if ((typeof window !== 'undefined') && isWindow(window))
         window.psycho = psycho;
